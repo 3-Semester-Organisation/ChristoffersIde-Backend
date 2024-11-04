@@ -1,4 +1,4 @@
-package ccy.reactiveprogramingmonoandflux.service;
+package ccy.reactiveprogramingmonoandflux.service.country;
 
 import ccy.reactiveprogramingmonoandflux.entity.Country;
 import ccy.reactiveprogramingmonoandflux.repository.CountryRepo;

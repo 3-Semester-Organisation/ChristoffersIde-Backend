@@ -9,7 +9,7 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>ccy</groupId>
-    <artifactId>ReactivePrograming-MonoAndFlux</artifactId>
+    <artifactId>ChristoffersIde-Backend</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>ReactivePrograming-MonoAndFlux</name>
     <description>ReactivePrograming-MonoAndFlux</description>

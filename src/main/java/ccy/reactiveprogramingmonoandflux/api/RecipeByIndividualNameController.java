@@ -1,10 +1,8 @@
 package ccy.reactiveprogramingmonoandflux.api;
 
-import ccy.reactiveprogramingmonoandflux.dto.AgeifyResponse;
-import ccy.reactiveprogramingmonoandflux.dto.GenderizeResponse;
-import ccy.reactiveprogramingmonoandflux.dto.NameInfoResponse;
-import ccy.reactiveprogramingmonoandflux.dto.NationalizeResponse;
-import ccy.reactiveprogramingmonoandflux.service.ProbableDemographicProfileService;
+import ccy.reactiveprogramingmonoandflux.dto.*;
+import ccy.reactiveprogramingmonoandflux.service.nameinfo.ProbableDemographicProfileService;
+import ccy.reactiveprogramingmonoandflux.service.openai.OpenAiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,26 +13,37 @@ import reactor.core.publisher.Mono;
 
 @RestController
 @RequiredArgsConstructor
-public class NameInfoController {
+public class RecipeByIndividualNameController {
 
 
     private final ProbableDemographicProfileService service;
+    private final OpenAiService openAiService;
 
 
-    @GetMapping("/name-info")
-    public ResponseEntity<NameInfoResponse> getNameInfo(@RequestParam String name) {
+    final static String SYSTEM_MESSAGE = """
+                          You are a helpful assistant that provides the most likely recipe for a diner that an individual would like, given the age, country and gender, for an individual
+                          You should be friendly and helpful, and provide useful information to the user.
+                          You should provide information that is relevant to the user's questions and help them with their dinner plans.
+                          If the user asks questions not related to food or dinner plans, you should politely guide them back to the main topic.
+                          """;
+
+
+    @GetMapping("/recipe-by-individual")
+    public ResponseEntity<MyResponse> getNameInfo(@RequestParam String name) {
 
         boolean doesExist = service.doesExist(name);
-        NameInfoResponse response;
+        NameInfoResponse nameInfoResponse;
         System.out.println(doesExist);
         if (doesExist) {
             System.out.println("made use of caching");
-            response = service.getNameInfoResponse(name);
+            nameInfoResponse = service.getNameInfoResponse(name);
 
         } else {
             System.out.println("No instance of " + name + " in cache");
-            response = getNameInfoResponseNonBlocking(name);
+            nameInfoResponse = getNameInfoResponseNonBlocking(name);
         }
+
+        MyResponse response = openAiService.makeRequest(nameInfoResponse, SYSTEM_MESSAGE);
 
         return ResponseEntity.ok(response);
     }
