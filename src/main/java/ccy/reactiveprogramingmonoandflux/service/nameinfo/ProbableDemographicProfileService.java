@@ -1,4 +1,4 @@
-package ccy.reactiveprogramingmonoandflux.service;
+package ccy.reactiveprogramingmonoandflux.service.nameinfo;
 
 import ccy.reactiveprogramingmonoandflux.dto.NameInfoResponse;
 

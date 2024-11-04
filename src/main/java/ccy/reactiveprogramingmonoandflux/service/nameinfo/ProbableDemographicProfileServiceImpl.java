@@ -1,4 +1,4 @@
-package ccy.reactiveprogramingmonoandflux.service;
+package ccy.reactiveprogramingmonoandflux.service.nameinfo;
 
 import ccy.reactiveprogramingmonoandflux.dto.CountryDto;
 import ccy.reactiveprogramingmonoandflux.dto.NameInfoResponse;
@@ -16,7 +16,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class ProbableDemographicProfileServiceImpl implements ProbableDemographicProfileService{
+public class ProbableDemographicProfileServiceImpl implements ProbableDemographicProfileService {
 
     private final ProbableDemographicProfileRepo repo;
     private final CountryRepo countryRepo;
