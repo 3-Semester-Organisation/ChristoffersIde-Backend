@@ -24,15 +24,17 @@ public class RecipeByIndividualNameController {
 
 
     final static String SYSTEM_MESSAGE = """
-            You are a helpful assistant that provides the most likely recipe for a diner that an individual would like, given the age, country and gender, for an individual
+            You are a helpful assistant that provides the most likely recipe for a dinner that an individual would like, given the age, country and gender, for an individual.
             You should be friendly and helpful, and provide useful information to the user.
             You should provide information that is relevant to the user's questions and help them with their dinner plans.
             If the user asks questions not related to food or dinner plans, you should politely guide them back to the main topic.
+            We are currently testing this function, so please keep the answer short, maximum a few short sentences, and leave out the recipe details for now.
             """;
+            // TODO: !!! OBS: HAR ÆNDRET SIDSTE LINJE I PROMPT FOR TESTING !!!
 
 ///recipe-by-individual?name=NAME&country=COUNTRY_ID
     @GetMapping("/recipe-by-individual")
-    public ResponseEntity<MyResponse> getNameInfo(@RequestParam String name, @RequestParam String country) {
+    public ResponseEntity<MyResponse> getNameInfo(@RequestParam String name, @RequestParam(required = false, defaultValue = "") String country) {
 
         boolean doesExist = service.doesExist(name);
         NameInfoResponse nameInfoResponse;
