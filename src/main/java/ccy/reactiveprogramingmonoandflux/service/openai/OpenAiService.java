@@ -125,6 +125,13 @@ public class OpenAiService {
     }
 
     public String createPromptFrom(NameInfoResponse nameInfo) {
-        return "Please provide me with a new delicious dinner recipe given that im a " + nameInfo.gender() + ", " + nameInfo.age() + "years of age and im from " + nameInfo.countryList().getFirst();
+        return "Generer en unik madopskrift, der er inspireret af det landet med følgende landekode: [landekode: " + nameInfo.countryList().getFirst() + "] " +
+               "og afbalanceret mellem traditionelle og moderne elementer. Opskriften skal tage højde for, at den er til en person på [alder: " + nameInfo.age() + "] år " +
+               "og [køn: " + nameInfo.gender() + "]. " +
+               "Lad landet inspirere ingredienser og smagsnuancer, men tilpas også opskriften til [køn: " + nameInfo.gender() + "]-specifikke kostpræferencer " +
+               "og tilpas den, så den passer til ernærings- og smagsbehov for en person på [alder: " + nameInfo.age() + "] år. " +
+               "Undgå at én af de tre faktorer dominerer for meget, men skab en opskrift, hvor alle tre har tydelig indflydelse på valget af ingredienser, tilberedningsteknik og serveringsforslag." +
+                "Giv Kun madopskriften som svar på denne forespørgsel.";
+
     }
 }
