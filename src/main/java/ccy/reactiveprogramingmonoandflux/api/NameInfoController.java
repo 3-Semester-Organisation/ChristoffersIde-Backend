@@ -6,7 +6,6 @@ import ccy.reactiveprogramingmonoandflux.dto.NameInfoResponse;
 import ccy.reactiveprogramingmonoandflux.dto.NationalizeResponse;
 import ccy.reactiveprogramingmonoandflux.service.ProbableDemographicProfileService;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -16,16 +15,10 @@ import reactor.core.publisher.Mono;
 
 @RestController
 @RequiredArgsConstructor
-public class DemoController {
+public class NameInfoController {
 
-    private final int SLEEP_TIME = 1000*3;
+
     private final ProbableDemographicProfileService service;
-
-    @GetMapping("/random-string-slow")
-    public String slowEndpoint() throws InterruptedException {
-        Thread.sleep(SLEEP_TIME);
-        return RandomStringUtils.randomAlphanumeric(10);
-    }
 
 
     @GetMapping("/name-info")
