@@ -13,7 +13,7 @@ import reactor.core.publisher.Mono;
 
 @RestController
 @RequiredArgsConstructor
-public class NameInfoController {
+public class RecipeByIndividualNameController {
 
 
     private final ProbableDemographicProfileService service;
