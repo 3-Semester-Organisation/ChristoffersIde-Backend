@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
+
 @RestController
 @RequiredArgsConstructor
 public class RecipeByIndividualNameController {
@@ -21,15 +24,15 @@ public class RecipeByIndividualNameController {
 
 
     final static String SYSTEM_MESSAGE = """
-                          You are a helpful assistant that provides the most likely recipe for a diner that an individual would like, given the age, country and gender, for an individual
-                          You should be friendly and helpful, and provide useful information to the user.
-                          You should provide information that is relevant to the user's questions and help them with their dinner plans.
-                          If the user asks questions not related to food or dinner plans, you should politely guide them back to the main topic.
-                          """;
+            You are a helpful assistant that provides the most likely recipe for a diner that an individual would like, given the age, country and gender, for an individual
+            You should be friendly and helpful, and provide useful information to the user.
+            You should provide information that is relevant to the user's questions and help them with their dinner plans.
+            If the user asks questions not related to food or dinner plans, you should politely guide them back to the main topic.
+            """;
 
-
+///recipe-by-individual?name=NAME&country=COUNTRY_ID
     @GetMapping("/recipe-by-individual")
-    public ResponseEntity<MyResponse> getNameInfo(@RequestParam String name) {
+    public ResponseEntity<MyResponse> getNameInfo(@RequestParam String name, @RequestParam String country) {
 
         boolean doesExist = service.doesExist(name);
         NameInfoResponse nameInfoResponse;
@@ -40,7 +43,7 @@ public class RecipeByIndividualNameController {
 
         } else {
             System.out.println("No instance of " + name + " in cache");
-            nameInfoResponse = getNameInfoResponseNonBlocking(name);
+            nameInfoResponse = getNameInfoResponseNonBlocking(name, country);
         }
 
         MyResponse response = openAiService.makeRequest(nameInfoResponse, SYSTEM_MESSAGE);
@@ -49,13 +52,34 @@ public class RecipeByIndividualNameController {
     }
 
 
-    private NameInfoResponse getNameInfoResponseNonBlocking(String name) {
+    private NameInfoResponse getNameInfoResponseNonBlocking(String name, String country) {
+        List<CountryDto> countryDtoList;
+
+        if (!country.isBlank()) { countryDtoList = List.of(new CountryDto(country, 1));
+        } else {
+            Mono<NationalizeResponse> potentialNationality = WebClient.create()
+                    .get()
+                    .uri("https://api.nationalize.io/?name=" + name)
+                    .retrieve()
+                    .bodyToMono(NationalizeResponse.class)
+                    .doOnError(error -> System.out.println("Nationalize Error:" + error));
+
+            NationalizeResponse countryResp = potentialNationality
+                    .map(tuple -> new NationalizeResponse(
+                    tuple.country()
+            )).block();
+
+            countryDtoList = countryResp.country();
+        }
+
+
         Mono<AgeifyResponse> potentialAge = WebClient.create()
                 .get()
                 .uri("https://api.agify.io?name=" + name)
                 .retrieve()
                 .bodyToMono(AgeifyResponse.class)
                 .doOnError(error -> System.out.println("Ageify Error:" + error));
+
 
         Mono<GenderizeResponse> potentialGender = WebClient.create()
                 .get()
@@ -64,21 +88,15 @@ public class RecipeByIndividualNameController {
                 .bodyToMono(GenderizeResponse.class)
                 .doOnError(error -> System.out.println("Genderize Error:" + error));
 
-        Mono<NationalizeResponse> potentialNationality = WebClient.create()
-                .get()
-                .uri("https://api.nationalize.io/?name=" + name)
-                .retrieve()
-                .bodyToMono(NationalizeResponse.class)
-                .doOnError(error -> System.out.println("Nationalize Error:" + error));
 
         long startTime = System.currentTimeMillis();
-        Mono<NameInfoResponse> nameInfoMono = Mono.zip(potentialAge, potentialGender, potentialNationality)
+        Mono<NameInfoResponse> nameInfoMono = Mono.zip(potentialAge, potentialGender)
                 .map(tuple3 -> new NameInfoResponse(
                         name,
                         tuple3.getT2().gender(),
                         tuple3.getT2().probability(),
                         tuple3.getT1().age(),
-                        tuple3.getT3().country()
+                        countryDtoList
                 ));
 
         NameInfoResponse nameInfoResponse = nameInfoMono.block();
