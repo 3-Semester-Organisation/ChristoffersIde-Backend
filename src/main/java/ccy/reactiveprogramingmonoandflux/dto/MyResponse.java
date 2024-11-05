@@ -21,8 +21,5 @@ public class MyResponse {
         this.answer = answer;
     }
 
-    public MyResponse(String answer, List<Map<String,String>> messages) {
-        this.answer = answer;
-        this.messages = messages;
-    }
+
 }

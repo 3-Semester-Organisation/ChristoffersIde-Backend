@@ -1,9 +1,12 @@
 package ccy.reactiveprogramingmonoandflux.api;
 
 import ccy.reactiveprogramingmonoandflux.dto.*;
+import ccy.reactiveprogramingmonoandflux.exception.ApiConnectivityException;
+import ccy.reactiveprogramingmonoandflux.exception.NameDataNotFoundException;
 import ccy.reactiveprogramingmonoandflux.service.nameinfo.ProbableDemographicProfileService;
 import ccy.reactiveprogramingmonoandflux.service.openai.OpenAiService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -30,11 +33,11 @@ public class RecipeByIndividualNameController {
             If the user asks questions not related to food or dinner plans, you should politely guide them back to the main topic.
             We are currently testing this function, so please keep the answer short, maximum a few short sentences, and leave out the recipe details for now.
             """;
-            // TODO: !!! OBS: HAR ÆNDRET SIDSTE LINJE I PROMPT FOR TESTING !!!
+    // TODO: !!! OBS: HAR ÆNDRET SIDSTE LINJE I PROMPT FOR TESTING !!!
 
-///recipe-by-individual?name=NAME&country=COUNTRY_ID
+    ///recipe-by-individual?name=NAME&country=COUNTRY_ID
     @GetMapping("/recipe-by-individual")
-    public ResponseEntity<MyResponse> getNameInfo(@RequestParam String name, @RequestParam(required = false, defaultValue = "") String country) {
+    public ResponseEntity<MyResponse> getNameInfo(@RequestParam String name) {
 
         boolean doesExist = service.doesExist(name);
         NameInfoResponse nameInfoResponse;
@@ -42,66 +45,85 @@ public class RecipeByIndividualNameController {
         if (doesExist) {
             System.out.println("made use of caching");
             nameInfoResponse = service.getNameInfoResponse(name);
-
+            MyResponse response = openAiService.makeRequest(nameInfoResponse, SYSTEM_MESSAGE);
+            return ResponseEntity.ok(response);
         } else {
             System.out.println("No instance of " + name + " in cache");
-            nameInfoResponse = getNameInfoResponseNonBlocking(name, country);
+
+            nameInfoResponse = getNameInfoResponseNonBlocking(name);
+
+            MyResponse response = openAiService.makeRequest(nameInfoResponse, SYSTEM_MESSAGE);
+            return ResponseEntity.ok(response);
         }
 
-        MyResponse response = openAiService.makeRequest(nameInfoResponse, SYSTEM_MESSAGE);
 
-        return ResponseEntity.ok(response);
     }
 
 
-    private NameInfoResponse getNameInfoResponseNonBlocking(String name, String country) {
-        List<CountryDto> countryDtoList;
+    private NameInfoResponse getNameInfoResponseNonBlocking(String name) {
+        //Find nationalitet først. Nationalitet bruges i de andre api'er
+        Mono<NationalizeResponse> potentialNationality = WebClient.create()
+                .get()
+                .uri("https://api.nationalize.io/?name=" + name)
+                .retrieve()
+                .bodyToMono(NationalizeResponse.class)
+                .onErrorMap(error -> {
+                    System.out.println("Nationalize Error: " + error.getMessage());
+                    throw new ApiConnectivityException("Failed to fetch nationality data (might have run out of tokens)");
+                });
 
-        if (!country.isBlank()) { countryDtoList = List.of(new CountryDto(country, 1));
-        } else {
-            Mono<NationalizeResponse> potentialNationality = WebClient.create()
-                    .get()
-                    .uri("https://api.nationalize.io/?name=" + name)
-                    .retrieve()
-                    .bodyToMono(NationalizeResponse.class)
-                    .doOnError(error -> System.out.println("Nationalize Error:" + error));
+        NationalizeResponse countryResp = potentialNationality
+                .map(tuple -> new NationalizeResponse(tuple.country()))
+                .block();
 
-            NationalizeResponse countryResp = potentialNationality
-                    .map(tuple -> new NationalizeResponse(
-                    tuple.country()
-            )).block();
+        List<CountryDto> countryDtoList = countryResp.country();
+        System.out.println(countryDtoList);
 
-            countryDtoList = countryResp.country();
+        if (countryDtoList.isEmpty()) {
+            throw new NameDataNotFoundException("Mamma mia! I couldn’t-a whip up that recipe! No country found by this name");
         }
+        String countryId = countryDtoList.getFirst().country_id();
 
 
         Mono<AgeifyResponse> potentialAge = WebClient.create()
                 .get()
-                .uri("https://api.agify.io?name=" + name)
+                .uri("https://api.agify.io?name=" + name + "&country_id=" + countryId)
                 .retrieve()
                 .bodyToMono(AgeifyResponse.class)
-                .doOnError(error -> System.out.println("Ageify Error:" + error));
-
+                .onErrorMap(error -> {
+                    System.out.println("Ageify Error: " + error.getMessage());
+                    throw new ApiConnectivityException("Failed to fetch age data (might have run out of tokens)");
+                });
 
         Mono<GenderizeResponse> potentialGender = WebClient.create()
                 .get()
-                .uri("https://api.genderize.io?name=" + name)
+                .uri("https://api.genderize.io?name=" + name + "&country_id=" + countryId)
                 .retrieve()
                 .bodyToMono(GenderizeResponse.class)
-                .doOnError(error -> System.out.println("Genderize Error:" + error));
-
+                .onErrorMap(error -> {
+                    System.out.println("Genderize Error: " + error.getMessage());
+                    throw new ApiConnectivityException("Failed to fetch gender data (might have run out of tokens)");
+                });
 
         long startTime = System.currentTimeMillis();
+
         Mono<NameInfoResponse> nameInfoMono = Mono.zip(potentialAge, potentialGender)
-                .map(tuple3 -> new NameInfoResponse(
+                .map(tuple -> new NameInfoResponse(
                         name,
-                        tuple3.getT2().gender(),
-                        tuple3.getT2().probability(),
-                        tuple3.getT1().age(),
+                        tuple.getT2().gender(),
+                        tuple.getT2().probability(),
+                        tuple.getT1().age(),
                         countryDtoList
                 ));
 
         NameInfoResponse nameInfoResponse = nameInfoMono.block();
+
+        if (nameInfoResponse.gender() == null) {
+            throw new NameDataNotFoundException("Mamma mia! I couldn’t-a whip up that recipe! No gender found by this name");
+        }
+        if (nameInfoResponse.age() == 0) {
+            throw new NameDataNotFoundException("Mamma mia! I couldn’t-a whip up that recipe! No age found by this name");
+        }
 
         long finishedTime = System.currentTimeMillis();
         long processingTime = finishedTime - startTime;
