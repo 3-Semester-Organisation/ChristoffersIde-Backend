@@ -37,7 +37,7 @@ public class OpenAiService {
             You should return the answer in JSON with the following format:
             {
                 "title": "Title of the dish",
-                "description": "Short description of the dish",
+                "description": "Short description of the dish. Include given country, age and gender",
                 "ingredients": {
                     "ingredient1": "amount",
                     "ingredient2": "amount",
