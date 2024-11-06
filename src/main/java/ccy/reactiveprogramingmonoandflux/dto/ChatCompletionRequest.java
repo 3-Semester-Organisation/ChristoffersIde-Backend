@@ -1,47 +1,22 @@
 package ccy.reactiveprogramingmonoandflux.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.beans.factory.annotation.Value;
 
 import java.util.ArrayList;
 import java.util.List;
 
-/*
- This DTO was made by ChatGPT 4.0 using this prompt
- https://chat.openai.com/share/457d16e0-5823-47ab-974b-373a423f9068
- */
-@Getter
-@Builder
-@AllArgsConstructor
+@Data
 public class ChatCompletionRequest {
 
-    @Value("${app.model}")
-    private String MODEL;
-
-    @Value("${app.temperature}")
-    private double TEMPERATURE;
-
-    @Value("${app.max_tokens}")
-    private int MAX_TOKENS;
-
-    @Value("${app.frequency_penalty}")
-    private double FREQUENCY_PENALTY;
-
-    @Value("${app.presence_penalty}")
-    private double PRESENCE_PENALTY;
-
-    @Value("${app.top_p}")
-    private double TOP_P;
-
-
-    private List<Message> messages;
-
-    public ChatCompletionRequest() {
-        this.messages = new ArrayList<>();
-    }
+    private String model;
+    private List<Message> messages = new ArrayList<>();
+    private double temperature;
+    private int max_tokens;
+    private double top_p;
+    private double frequency_penalty;
+    private double presence_penalty;
 
     @Getter
     @Setter

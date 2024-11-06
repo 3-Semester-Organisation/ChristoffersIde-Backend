@@ -72,7 +72,23 @@ public class OpenAiService {
             """;
     // TODO: !!! OBS: HAR ÆNDRET SIDSTE LINJE I PROMPT FOR TESTING !!!
 
+    @Value("${app.model}")
+    private String MODEL;
 
+    @Value("${app.temperature}")
+    private double TEMPERATURE;
+
+    @Value("${app.max_tokens}")
+    private int MAX_TOKENS;
+
+    @Value("${app.frequency_penalty}")
+    private double FREQUENCY_PENALTY;
+
+    @Value("${app.presence_penalty}")
+    private double PRESENCE_PENALTY;
+
+    @Value("${app.top_p}")
+    private double TOP_P;
 
     @Value("${app.api-key}")
     private String API_KEY;
@@ -101,9 +117,16 @@ public class OpenAiService {
         String prompt = createPromptFrom(nameInfo);
 
         ChatCompletionRequest request = new ChatCompletionRequest();
+        request.setModel(MODEL);
+        request.setTemperature(TEMPERATURE);
+        request.setMax_tokens(MAX_TOKENS);
+        request.setTop_p(TOP_P);
+        request.setFrequency_penalty(FREQUENCY_PENALTY);
+        request.setPresence_penalty(PRESENCE_PENALTY);
         request.getMessages().add(new ChatCompletionRequest.Message("system", SYSTEM_MESSAGE_FOR_RECIPE_BY_NAME));
         request.getMessages().add(new ChatCompletionRequest.Message("user", prompt));
 
+        System.out.println(request.getModel());
         ObjectMapper mapper = new ObjectMapper();
         String json;
         String err;
@@ -146,7 +169,12 @@ public class OpenAiService {
 
     public MyResponse makeRequest(UserSpecifications specifications) {
         ChatCompletionRequest request = new ChatCompletionRequest();
-
+        request.setModel(MODEL);
+        request.setTemperature(TEMPERATURE);
+        request.setMax_tokens(MAX_TOKENS);
+        request.setTop_p(TOP_P);
+        request.setFrequency_penalty(FREQUENCY_PENALTY);
+        request.setPresence_penalty(PRESENCE_PENALTY);
         String prompt = createPromptFrom(specifications);
 
         request.getMessages().add(new ChatCompletionRequest.Message("system", SYSTEM_MESSAGE_FOR_RECIPE_BY_SPECIFICATIONS));
