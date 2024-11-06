@@ -4,6 +4,6 @@ import java.util.List;
 
 public record UserSpecifications(
         List<String> ingredients,
-        DietaryRequirement dietaryRequirement
+        DietaryRequirement dietaryRequirements
 ) {
 }
