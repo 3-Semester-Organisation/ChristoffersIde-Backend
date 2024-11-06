@@ -28,10 +28,7 @@ public class SecurityConfig {
         // Set up CORS configuration
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOriginPatterns(List.of(
-                "http://localhost:5500",
-                "http://localhost:5173",
-                "http://localhost:1337",
-                "http://localhost:63342",
+                "http://localhost:*",
                 "https://fjeldberg.ddns.net"
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
