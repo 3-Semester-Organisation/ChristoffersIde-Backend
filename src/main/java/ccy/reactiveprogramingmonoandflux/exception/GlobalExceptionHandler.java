@@ -17,7 +17,7 @@ public class GlobalExceptionHandler {
 
 
     @ExceptionHandler(NameDataNotFoundException.class)
-    public ResponseEntity<MyResponse> handleApiConnectivityException(NameDataNotFoundException ex) {
+    public ResponseEntity<MyResponse> handleNameDataNotFoundException(NameDataNotFoundException ex) {
         MyResponse response = new MyResponse(ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }

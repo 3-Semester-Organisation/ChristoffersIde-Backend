@@ -28,10 +28,22 @@ public class RecipeByIndividualNameController {
 
     final static String SYSTEM_MESSAGE = """
             You are a helpful assistant that provides the most likely recipe for a dinner that an individual would like, given the age, country and gender, for an individual.
-            You should be friendly and helpful, and provide useful information to the user.
             You should provide information that is relevant to the user's questions and help them with their dinner plans.
-            If the user asks questions not related to food or dinner plans, you should politely guide them back to the main topic.
-            We are currently testing this function, so please keep the answer short, maximum a few short sentences, and leave out the recipe details for now.
+            You should return the answer in JSON with the following format:
+            {
+                "title": "Title of the dish",
+                "description": "Short description of the dish",
+                "ingredients": {
+                    "ingredient1": "amount",
+                    "ingredient2": "amount",
+                    ...
+                },
+                "instructions": [
+                    "Step 1",
+                    "Step 2",
+                    ...
+                ]
+            }
             """;
     // TODO: !!! OBS: HAR ÆNDRET SIDSTE LINJE I PROMPT FOR TESTING !!!
 
