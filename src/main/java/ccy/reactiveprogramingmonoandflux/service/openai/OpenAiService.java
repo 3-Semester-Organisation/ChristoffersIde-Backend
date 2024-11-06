@@ -31,7 +31,8 @@ public class OpenAiService {
     public static final Logger logger = LoggerFactory.getLogger(OpenAiService.class);
 
     final static String SYSTEM_MESSAGE_FOR_RECIPE_BY_NAME = """
-            You are a helpful assistant that provides the most likely recipe for a dinner that an individual would like, given the age, country and gender, for an individual.
+            You are a helpful assistant that provides the most likely recipe for a dinner that an individual would like, given the age, country code and gender, for an individual.
+            Each of the three variable must be weighted equally.
             You should provide information that is relevant to the user's questions and help them with their dinner plans.
             You should return the answer in JSON with the following format:
             {
@@ -52,7 +53,8 @@ public class OpenAiService {
     // TODO: !!! OBS: HAR ÆNDRET SIDSTE LINJE I PROMPT FOR TESTING !!!
 
     final static String SYSTEM_MESSAGE_FOR_RECIPE_BY_SPECIFICATIONS = """
-            You are a helpful assistant that provides recipe given a list of ingredients and some dietary.
+            You are a helpful assistant that provides a recipe given a list of ingredients and some dietary restrictions.
+            All ingredients has to be included in the recipe, and dietary restrictions must be taken into account.
             You should provide information that is relevant to the user's questions and help them with their dinner plans.
             You should return the answer in JSON with the following format:
             {
@@ -207,13 +209,7 @@ public class OpenAiService {
 
 
     public String createPromptFrom(NameInfoResponse nameInfo) {
-        return "Generer en unik madopskrift, der er inspireret af det landet med følgende landekode: [landekode: " + nameInfo.countryList().getFirst() + "] " +
-                "og afbalanceret mellem traditionelle og moderne elementer. Opskriften skal tage højde for, at den er til en person på [alder: " + nameInfo.age() + "] år " +
-                "og [køn: " + nameInfo.gender() + "]. " +
-                "Lad landet inspirere ingredienser og smagsnuancer, men tilpas også opskriften til [køn: " + nameInfo.gender() + "]-specifikke kostpræferencer " +
-                "og tilpas den, så den passer til ernærings- og smagsbehov for en person på [alder: " + nameInfo.age() + "] år. " +
-                "Undgå at én af de tre faktorer dominerer for meget, men skab en opskrift, hvor alle tre har tydelig indflydelse på valget af ingredienser, tilberedningsteknik og serveringsforslag." +
-                "Giv Kun madopskriften som svar på denne forespørgsel.";
+        return "Provide a recipe given the age of " + nameInfo.age() + ", the gender of " + nameInfo.gender() + ", and the country code of " + nameInfo.countryList().getFirst() + ".";
     }
 
     public String createPromptFrom(UserSpecifications specifications) {
