@@ -23,28 +23,6 @@ public class RecipeByIndividualNameController {
     private final ProbableDemographicProfileService service;
     private final OpenAiService openAiService;
 
-
-    final static String SYSTEM_MESSAGE = """
-            You are a helpful assistant that provides the most likely recipe for a dinner that an individual would like, given the age, country and gender, for an individual.
-            You should provide information that is relevant to the user's questions and help them with their dinner plans.
-            You should return the answer in JSON with the following format:
-            {
-                "title": "Title of the dish",
-                "description": "Short description of the dish",
-                "ingredients": {
-                    "ingredient1": "amount",
-                    "ingredient2": "amount",
-                    ...
-                },
-                "instructions": [
-                    "Step 1",
-                    "Step 2",
-                    ...
-                ]
-            }
-            """;
-    // TODO: !!! OBS: HAR ÆNDRET SIDSTE LINJE I PROMPT FOR TESTING !!!
-
     ///recipe-by-individual?name=NAME&country=COUNTRY_ID
     @GetMapping("/recipe-by-individual")
     public ResponseEntity<MyResponse> getNameInfo(@RequestParam String name) {
@@ -55,14 +33,14 @@ public class RecipeByIndividualNameController {
         if (doesExist) {
             System.out.println("made use of caching");
             nameInfoResponse = service.getNameInfoResponse(name);
-            MyResponse response = openAiService.makeRequest(nameInfoResponse, SYSTEM_MESSAGE);
+            MyResponse response = openAiService.makeRequest(nameInfoResponse);
             return ResponseEntity.ok(response);
         } else {
             System.out.println("No instance of " + name + " in cache");
 
             nameInfoResponse = getNameInfoResponseNonBlocking(name);
 
-            MyResponse response = openAiService.makeRequest(nameInfoResponse, SYSTEM_MESSAGE);
+            MyResponse response = openAiService.makeRequest(nameInfoResponse);
             return ResponseEntity.ok(response);
         }
     }
@@ -71,7 +49,7 @@ public class RecipeByIndividualNameController {
 
     @PostMapping("/recipe-by-specification")
     public ResponseEntity<MyResponse> getUserSpecificRecipe(@RequestBody UserSpecifications specifications) {
-        MyResponse response = openAiService.makeRequest(specifications, SYSTEM_MESSAGE);
+        MyResponse response = openAiService.makeRequest(specifications);
         return ResponseEntity.ok(response);
     }
 

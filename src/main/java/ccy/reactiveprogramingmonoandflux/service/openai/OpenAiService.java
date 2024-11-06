@@ -30,6 +30,50 @@ public class OpenAiService {
 
     public static final Logger logger = LoggerFactory.getLogger(OpenAiService.class);
 
+    final static String SYSTEM_MESSAGE_FOR_RECIPE_BY_NAME = """
+            You are a helpful assistant that provides the most likely recipe for a dinner that an individual would like, given the age, country and gender, for an individual.
+            You should provide information that is relevant to the user's questions and help them with their dinner plans.
+            You should return the answer in JSON with the following format:
+            {
+                "title": "Title of the dish",
+                "description": "Short description of the dish",
+                "ingredients": {
+                    "ingredient1": "amount",
+                    "ingredient2": "amount",
+                    ...
+                },
+                "instructions": [
+                    "Step 1",
+                    "Step 2",
+                    ...
+                ]
+            }
+            """;
+    // TODO: !!! OBS: HAR ÆNDRET SIDSTE LINJE I PROMPT FOR TESTING !!!
+
+    final static String SYSTEM_MESSAGE_FOR_RECIPE_BY_SPECIFICATIONS = """
+            You are a helpful assistant that provides recipe given a list of ingredients and some dietary.
+            You should provide information that is relevant to the user's questions and help them with their dinner plans.
+            You should return the answer in JSON with the following format:
+            {
+                "title": "Title of the dish",
+                "description": "Short description of the dish",
+                "ingredients": {
+                    "ingredient1": "amount",
+                    "ingredient2": "amount",
+                    ...
+                },
+                "instructions": [
+                    "Step 1",
+                    "Step 2",
+                    ...
+                ]
+            }
+            """;
+    // TODO: !!! OBS: HAR ÆNDRET SIDSTE LINJE I PROMPT FOR TESTING !!!
+
+
+
     @Value("${app.api-key}")
     private String API_KEY;
 
@@ -52,12 +96,12 @@ public class OpenAiService {
     }
 
 
-    public MyResponse makeRequest(NameInfoResponse nameInfo, String _systemMessage) {
+    public MyResponse makeRequest(NameInfoResponse nameInfo) {
 
         String prompt = createPromptFrom(nameInfo);
 
         ChatCompletionRequest request = new ChatCompletionRequest();
-        request.getMessages().add(new ChatCompletionRequest.Message("system", _systemMessage));
+        request.getMessages().add(new ChatCompletionRequest.Message("system", SYSTEM_MESSAGE_FOR_RECIPE_BY_NAME));
         request.getMessages().add(new ChatCompletionRequest.Message("user", prompt));
 
         ObjectMapper mapper = new ObjectMapper();
@@ -100,12 +144,12 @@ public class OpenAiService {
     }
 
 
-    public MyResponse makeRequest(UserSpecifications specifications, String _systemMessage) {
+    public MyResponse makeRequest(UserSpecifications specifications) {
         ChatCompletionRequest request = new ChatCompletionRequest();
 
         String prompt = createPromptFrom(specifications);
 
-        request.getMessages().add(new ChatCompletionRequest.Message("system", _systemMessage));
+        request.getMessages().add(new ChatCompletionRequest.Message("system", SYSTEM_MESSAGE_FOR_RECIPE_BY_SPECIFICATIONS));
         request.getMessages().add(new ChatCompletionRequest.Message("user", prompt));
 
         ObjectMapper mapper = new ObjectMapper();
