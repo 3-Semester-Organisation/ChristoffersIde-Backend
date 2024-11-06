@@ -8,9 +8,7 @@ import ccy.reactiveprogramingmonoandflux.service.openai.OpenAiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
@@ -55,9 +53,16 @@ public class RecipeByIndividualNameController {
             MyResponse response = openAiService.makeRequest(nameInfoResponse, SYSTEM_MESSAGE);
             return ResponseEntity.ok(response);
         }
-
-
     }
+
+
+
+    @PostMapping("/recipe-by-specification")
+    public ResponseEntity<MyResponse> getUserSpecificRecipe(@RequestBody UserSpecifications specifications) {
+        MyResponse response = openAiService.makeRequest(specifications, SYSTEM_MESSAGE);
+        return ResponseEntity.ok(response);
+    }
+
 
 
     private NameInfoResponse getNameInfoResponseNonBlocking(String name) {
