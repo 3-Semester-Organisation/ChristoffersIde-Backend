@@ -1,9 +1,6 @@
 package ccy.reactiveprogramingmonoandflux.service.openai;
 
-import ccy.reactiveprogramingmonoandflux.dto.ChatCompletionRequest;
-import ccy.reactiveprogramingmonoandflux.dto.ChatCompletionResponse;
-import ccy.reactiveprogramingmonoandflux.dto.MyResponse;
-import ccy.reactiveprogramingmonoandflux.dto.NameInfoResponse;
+import ccy.reactiveprogramingmonoandflux.dto.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,25 +39,8 @@ public class OpenAiService {
     @Value("${app.url}")
     public String URL;
 
-    @Value("${app.model}")
-    public String MODEL;
 
-    @Value("${app.temperature}")
-    public double TEMPERATURE;
-
-    @Value("${app.max_tokens}")
-    public int MAX_TOKENS;
-
-    @Value("${app.frequency_penalty}")
-    public double FREQUENCY_PENALTY;
-
-    @Value("${app.presence_penalty}")
-    public double PRESENCE_PENALTY;
-
-    @Value("${app.top_p}")
-    public double TOP_P;
-
-    private WebClient client;
+    private final WebClient client;
 
     public OpenAiService() {
         this.client = WebClient.create();
@@ -71,23 +51,18 @@ public class OpenAiService {
         this.client = client;
     }
 
+
     public MyResponse makeRequest(NameInfoResponse nameInfo, String _systemMessage) {
 
         String prompt = createPromptFrom(nameInfo);
 
         ChatCompletionRequest request = new ChatCompletionRequest();
-        request.setModel(MODEL);
-        request.setTemperature(TEMPERATURE);
-        request.setMax_tokens(MAX_TOKENS);
-        request.setTop_p(TOP_P);
-        request.setFrequency_penalty(FREQUENCY_PENALTY);
-        request.setPresence_penalty(PRESENCE_PENALTY);
         request.getMessages().add(new ChatCompletionRequest.Message("system", _systemMessage));
         request.getMessages().add(new ChatCompletionRequest.Message("user", prompt));
 
         ObjectMapper mapper = new ObjectMapper();
-        String json = "";
-        String err = null;
+        String json;
+        String err;
         try {
             json = mapper.writeValueAsString(request);
             ChatCompletionResponse response = client.post()
@@ -124,14 +99,73 @@ public class OpenAiService {
         }
     }
 
+
+    public MyResponse makeRequest(UserSpecifications specifications, String _systemMessage) {
+        ChatCompletionRequest request = new ChatCompletionRequest();
+
+        String prompt = createPromptFrom(specifications);
+
+        request.getMessages().add(new ChatCompletionRequest.Message("system", _systemMessage));
+        request.getMessages().add(new ChatCompletionRequest.Message("user", prompt));
+
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            String json = mapper.writeValueAsString(request);
+            ChatCompletionResponse openAiApiResponse = client.post()
+                    .uri(new URI(URL))
+                    .header("Authorization", "Bearer " + API_KEY)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON)
+                    .body(BodyInserters.fromValue(json))
+                    .retrieve()
+                    .bodyToMono(ChatCompletionResponse.class)
+                    .block();
+
+            String responseMsg = openAiApiResponse.getChoices().get(0).getMessage().getContent();
+
+            MyResponse response = new MyResponse(responseMsg);
+            return response;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Something went wrong");
+        }
+    }
+
+
     public String createPromptFrom(NameInfoResponse nameInfo) {
         return "Generer en unik madopskrift, der er inspireret af det landet med følgende landekode: [landekode: " + nameInfo.countryList().getFirst() + "] " +
-               "og afbalanceret mellem traditionelle og moderne elementer. Opskriften skal tage højde for, at den er til en person på [alder: " + nameInfo.age() + "] år " +
-               "og [køn: " + nameInfo.gender() + "]. " +
-               "Lad landet inspirere ingredienser og smagsnuancer, men tilpas også opskriften til [køn: " + nameInfo.gender() + "]-specifikke kostpræferencer " +
-               "og tilpas den, så den passer til ernærings- og smagsbehov for en person på [alder: " + nameInfo.age() + "] år. " +
-               "Undgå at én af de tre faktorer dominerer for meget, men skab en opskrift, hvor alle tre har tydelig indflydelse på valget af ingredienser, tilberedningsteknik og serveringsforslag." +
+                "og afbalanceret mellem traditionelle og moderne elementer. Opskriften skal tage højde for, at den er til en person på [alder: " + nameInfo.age() + "] år " +
+                "og [køn: " + nameInfo.gender() + "]. " +
+                "Lad landet inspirere ingredienser og smagsnuancer, men tilpas også opskriften til [køn: " + nameInfo.gender() + "]-specifikke kostpræferencer " +
+                "og tilpas den, så den passer til ernærings- og smagsbehov for en person på [alder: " + nameInfo.age() + "] år. " +
+                "Undgå at én af de tre faktorer dominerer for meget, men skab en opskrift, hvor alle tre har tydelig indflydelse på valget af ingredienser, tilberedningsteknik og serveringsforslag." +
                 "Giv Kun madopskriften som svar på denne forespørgsel.";
+    }
 
+    public String createPromptFrom(UserSpecifications specifications) {
+
+        StringBuilder prompt = new StringBuilder();
+
+        prompt.append("Given this list of ingredients: ");
+        for (String ingredient : specifications.ingredients()) {
+            prompt.append(ingredient).append(", ");
+        }
+
+        DietaryRequirement dietaryRequirement = specifications.dietaryRequirement();
+        boolean isVegan = dietaryRequirement.vegan();
+        boolean isVegetarian = dietaryRequirement.vegetarian();
+        boolean isLactoseIntolerant = dietaryRequirement.lactoseIntolerant();
+        boolean isGlutenIntolerant = dietaryRequirement.glutenIntolerant();
+
+        prompt.append("and these dietary limitations: ");
+        prompt.append("isVegan: ").append(isVegan).append(", ");
+        prompt.append("isVegetarian: ").append(isVegetarian).append(", ");
+        prompt.append("isLactoseIntolerant: ").append(isLactoseIntolerant).append(", ");
+        prompt.append("isGlutenIntolerant: ").append(isGlutenIntolerant).append(". ");
+
+        prompt.append("Please create a recipe that makes use of the given list of ingredients and that considers the dietary limitations.");
+
+        return prompt.toString();
     }
 }
