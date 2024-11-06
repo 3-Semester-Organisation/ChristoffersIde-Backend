@@ -22,4 +22,9 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<MyResponse> handleApiConnectivityException(RuntimeException ex) {
+        MyResponse response = new MyResponse(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
 }
