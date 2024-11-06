@@ -179,6 +179,7 @@ public class OpenAiService {
         request.setPresence_penalty(PRESENCE_PENALTY);
         String prompt = createPromptFrom(specifications);
 
+        System.out.println(prompt);
         request.getMessages().add(new ChatCompletionRequest.Message("system", SYSTEM_MESSAGE_FOR_RECIPE_BY_SPECIFICATIONS));
         request.getMessages().add(new ChatCompletionRequest.Message("user", prompt));
 
@@ -213,6 +214,7 @@ public class OpenAiService {
 
     public String createPromptFrom(UserSpecifications specifications) {
 
+        System.out.println(specifications);
         StringBuilder prompt = new StringBuilder();
 
         prompt.append("Given this list of ingredients: ");
@@ -220,7 +222,7 @@ public class OpenAiService {
             prompt.append(ingredient).append(", ");
         }
 
-        DietaryRequirement dietaryRequirement = specifications.dietaryRequirement();
+        DietaryRequirement dietaryRequirement = specifications.dietaryRequirements();
         boolean isVegan = dietaryRequirement.vegan();
         boolean isVegetarian = dietaryRequirement.vegetarian();
         boolean isLactoseIntolerant = dietaryRequirement.lactoseIntolerant();
