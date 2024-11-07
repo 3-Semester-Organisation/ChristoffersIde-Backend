@@ -34,7 +34,7 @@ public class OpenAiService {
             You are a helpful assistant that provides the most likely recipe for a dinner that an individual would like, given the age, country code and gender, for an individual.
             Each of the three variable must be weighted equally.
             You should provide information that is relevant to the user's questions and help them with their dinner plans.
-            You should return the answer in JSON with the following format:
+            You should return the answer in JSON with the exact following format and do not surround it using backticks:
             {
                 "title": "Title of the dish",
                 "description": "Short description of the dish. Include given country, age and gender",
@@ -56,7 +56,7 @@ public class OpenAiService {
             You are a helpful assistant that provides a recipe given a list of ingredients and some dietary restrictions.
             All ingredients has to be included in the recipe, and dietary restrictions must be taken into account.
             You should provide information that is relevant to the user's questions and help them with their dinner plans.
-            You should return the answer in JSON with the following format:
+            You should return the answer in JSON with the exact following format and do not surround it using backticks:
             {
                 "title": "Title of the dish",
                 "description": "Short description of the dish",
